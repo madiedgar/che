@@ -437,9 +437,8 @@ export class DriverHelper {
     }
 
     async waitOpenningSecondWindow(timeout: number = TestConstants.TS_SELENIUM_DEFAULT_TIMEOUT) {
-        const handles: string[] = await this.driver.getAllWindowHandles();
         await this.driver.wait(async () => {
-            console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>:' + handles.length);
+            const handles: string[] = await this.driver.getAllWindowHandles();
            if (handles.length > 1) {
                 return true;
             }

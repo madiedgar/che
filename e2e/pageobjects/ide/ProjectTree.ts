@@ -76,14 +76,13 @@ export class ProjectTree {
 
     async clickOnItem(itemPath: string, timeout: number = TestConstants.TS_SELENIUM_DEFAULT_TIMEOUT) {
         const locator: string = await this.getItemCss(itemPath);
-        const normalizedPathToProject: string = locator.split(':')[1];
         await this.driverHelper.waitAndClick(By.css(locator), timeout);
-        await this.waitItemSelected(normalizedPathToProject, timeout);
+        await this.waitItemSelected(itemPath, timeout);
+
     }
 
     async waitItemSelected(itemPath: string, timeout: number = TestConstants.TS_SELENIUM_DEFAULT_TIMEOUT) {
-        const selectedItemLocator: By = By.css(`div[title='${itemPath}'].theia-mod-selected.theia-mod-focus`);
-
+        const selectedItemLocator: By = By.css(`div[title='/projects/${itemPath}'].theia-mod-selected.theia-mod-focus`);
         await this.driverHelper.waitVisibility(selectedItemLocator, timeout);
     }
 
@@ -132,14 +131,14 @@ export class ProjectTree {
     }
 
     async expandPathAndOpenFile(pathToItem: string, fileName: string, timeout: number = TestConstants.TS_SELENIUM_DEFAULT_TIMEOUT) {
-        let currentPath: string = '';
+        let projectName: string = '';
         let paths: Array<string> = new Array();
 
         // make direct path for each project tree item
         pathToItem.split('/')
             .forEach(item => {
-                currentPath = `${currentPath}/${item}`;
-                paths.push(currentPath);
+                projectName = `${projectName}/${item}`;
+                paths.push(projectName);
             });
 
         // expand each project tree item
@@ -155,24 +154,24 @@ export class ProjectTree {
         await this.editor.waitTab(fileName);
     }
 
-    async expandPathAndOpenFileInAssociatedWorkspace(wsName: string, pathToItem: string, fileName: string, timeout: number = TestConstants.TS_SELENIUM_DEFAULT_TIMEOUT) {
-        let currentPath: string = `/${wsName}`;
+    async expandPathAndOpenFileInAssociatedWorkspace(pathToItem: string, fileName: string, timeout: number = TestConstants.TS_SELENIUM_DEFAULT_TIMEOUT) {
+        let projectName: string = pathToItem.split('/')[0];
+        let pathEntry = `${projectName}`;
+        let patToItemInAssociatedWorkspace = pathToItem.replace(`${projectName}/`, '');
         let paths: Array<string> = new Array();
-
         // make direct path for each project tree item
-        pathToItem.split('/')
+        patToItemInAssociatedWorkspace.split('/')
             .forEach(item => {
-                currentPath = `${currentPath}/${item}`;
-                paths.push(currentPath);
+               pathEntry = pathEntry + `/${item}`;
+               paths.push(pathEntry);
             });
 
         // expand each project tree item
         for (const path of paths) {
             await this.expandItem(path, timeout);
         }
-
         // open file
-        await this.clickOnItem(`/${wsName}/${pathToItem}/${fileName}`, timeout);
+        await this.clickOnItem(`${projectName}/${patToItemInAssociatedWorkspace}/${fileName}`, timeout);
 
         // check file appearance in the editor
         await this.editor.waitEditorOpened(fileName, timeout);
@@ -185,9 +184,12 @@ export class ProjectTree {
         visibilityItemPolling: number = TestConstants.TS_SELENIUM_DEFAULT_POLLING * 5,
         triesPolling: number = TestConstants.TS_SELENIUM_DEFAULT_POLLING * 30) {
 
-        const rootItem: string = `/${projectName}`;
-        const rootItemLocator: By = By.css(this.getTreeItemCssLocator(`/${projectName}`));
-        const rootSubitemLocator: By = By.css(this.getTreeItemCssLocator(`/${projectName}/${rootSubItem}`));
+        const rootItem: string = `${projectName}`;
+        const rootItemLocator: By = By.css(this.getTreeItemCssLocator(`${projectName}`));
+        const rootSubitemLocator: By = By.css(this.getTreeItemCssLocator(`${projectName}/${rootSubItem}`));
+
+
+
 
         for (let i = 0; i < attempts; i++) {
             const isProjectFolderVisible = await this.driverHelper.waitVisibilityBoolean(rootItemLocator, attempts, visibilityItemPolling);
@@ -232,7 +234,7 @@ export class ProjectTree {
 
     private async getItemCss( itemPath: string): Promise<string> {
         const entry: string = await this.getWorkspacePathEntry();
-        return `div[id='${entry}/projects${itemPath}']`;
+        return `div[id='${entry}/projects/${itemPath}']`;
     }
 
     private async getCollapsedItemCssLocator( itemPath: string): Promise<string> {
@@ -247,11 +249,11 @@ export class ProjectTree {
 
     private async getExpandIconCssLocator(itemPath: string):  Promise<string> {
         const entry: string = await this.getWorkspacePathEntry();
-        return `div[data-node-id='${entry}/projects${itemPath}']`;
+        return `div[data-node-id='${entry}/projects/${itemPath}']`;
     }
 
     private getTreeItemCssLocator(itemPath: string): string {
-        return `.theia-TreeNode[title='/projects${itemPath}']`;
+        return `.theia-TreeNode[title='/projects/${itemPath}']`;
     }
 
 }
