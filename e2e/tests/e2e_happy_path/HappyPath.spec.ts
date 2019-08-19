@@ -23,8 +23,8 @@ import { By, Key, error } from 'selenium-webdriver';
 import { Terminal } from '../../pageobjects/ide/Terminal';
 import { DebugView } from '../../pageobjects/ide/DebugView';
 import { WarningDialog } from '../../pageobjects/ide/WarningDialog';
-// import { OpenWorkspaceWidget } from '../../pageobjects/ide/OpenWorkspaceWidget';
-
+import { OpenWorkspaceWidget } from '../../pageobjects/ide/OpenWorkspaceWidget';
+import * as fs from 'fs';
 
 const driverHelper: DriverHelper = e2eContainer.get(CLASSES.DriverHelper);
 const ide: Ide = e2eContainer.get(CLASSES.Ide);
@@ -37,20 +37,20 @@ const rightToolbar: RightToolbar = e2eContainer.get(CLASSES.RightToolbar);
 const terminal: Terminal = e2eContainer.get(CLASSES.Terminal);
 const debugView: DebugView = e2eContainer.get(CLASSES.DebugView);
 const warningDialog: WarningDialog = e2eContainer.get(CLASSES.WarningDialog);
-// const openWorkspaceWidget: OpenWorkspaceWidget = e2eContainer.get(CLASSES.OpenWorkspaceWidget);
+const openWorkspaceWidget: OpenWorkspaceWidget = e2eContainer.get(CLASSES.OpenWorkspaceWidget);
 const projectName: string = 'petclinic';
 const namespace: string = TestConstants.TS_SELENIUM_USERNAME;
 const workspaceName: string = TestConstants.TS_SELENIUM_HAPPY_PATH_WORKSPACE_NAME;
 const workspaceUrl: string = `${TestConstants.TS_SELENIUM_BASE_URL}/dashboard/#/ide/${namespace}/${workspaceName}`;
 const pathToJavaFolder: string = `${projectName}/src/main/java/org/springframework/samples/petclinic`;
 const pathToChangedJavaFileFolder: string = `${projectName}/src/main/java/org/springframework/samples/petclinic/system`;
-// const classPathFilename: string = '.classpath';
+const classPathFilename: string = '.classpath';
 const javaFileName: string = 'PetClinicApplication.java';
 const changedJavaFileName: string = 'CrashController.java';
 const textForErrorMessageChange: string = 'HHHHHHHHHHHHH';
-// const codeNavigationClassName: string = 'SpringApplication.class';
-// const pathToYamlFolder: string = projectName;
-// const yamlFileName: string = 'devfile.yaml';
+const codeNavigationClassName: string = 'SpringApplication.class';
+const pathToYamlFolder: string = projectName;
+const yamlFileName: string = 'devfile.yaml';
 
 const SpringAppLocators = {
     springTitleLocator: By.xpath('//div[@class=\'container-fluid\']//h2[text()=\'Welcome\']'),
@@ -69,73 +69,72 @@ suite('Validation of workspace start', async () => {
     test('Wait workspace running state', async () => {
         await ide.waitWorkspaceAndIde(namespace, workspaceName);
         await projectTree.openProjectTreeContainer();
-        // await projectTree.waitProjectImported(projectName, 'src');
-
+        await projectTree.waitProjectImported(projectName, 'src');
     });
 
-//     test('Wait until project is imported', async () => {
-//         const rootWsName: string = 'projects';
-//         const mainWindowHandle: string = await driverHelper.getDriver().getWindowHandle();
-//         await topMenu.selectOption('File', 'Open Workspace...');
-//         await openWorkspaceWidget.selectRootWorkspaceItemInDropDawn(rootWsName);
-//         await openWorkspaceWidget.selectItemInTreeAndOpenWorkspace(`/${rootWsName}/${projectName}`);
-//         await driverHelper.switchToSecondWindow(mainWindowHandle);
-//         await projectTree.openProjectTreeContainer();
+    test('Wait until project is imported', async () => {
+        const rootWsName: string = 'projects';
+        const mainWindowHandle: string = await driverHelper.getDriver().getWindowHandle();
+        await topMenu.selectOption('File', 'Open Workspace...');
+        await openWorkspaceWidget.selectRootWorkspaceItemInDropDawn(rootWsName);
+        await openWorkspaceWidget.selectItemInTreeAndOpenWorkspace(`/${rootWsName}/${projectName}`);
+        await driverHelper.switchToSecondWindow(mainWindowHandle);
+        await projectTree.openProjectTreeContainer();
 
-//     });
-// });
+    });
+});
 
-// suite('Language server validation', async () => {
-//     test('Java LS initialization', async () => {
-//         await projectTree.expandPathAndOpenFileInAssociatedWorkspace(pathToJavaFolder, javaFileName);
-//         await editor.selectTab(javaFileName);
-//         await ide.checkLsInitializationStart('Starting Java Language Server');
-//         await ide.waitStatusBarTextAbsence('Starting Java Language Server', 360000);
-//         await checkJavaPathCompletion();
-//         await ide.waitStatusBarTextAbsence('Building workspace', 360000);
-//     });
+suite('Language server validation', async () => {
+    test('Java LS initialization', async () => {
+        await projectTree.expandPathAndOpenFileInAssociatedWorkspace(pathToJavaFolder, javaFileName);
+        await editor.selectTab(javaFileName);
+        await ide.checkLsInitializationStart('Starting Java Language Server');
+        await ide.waitStatusBarTextAbsence('Starting Java Language Server', 360000);
+        await checkJavaPathCompletion();
+        await ide.waitStatusBarTextAbsence('Building workspace', 360000);
+    });
 
-//     test('Error highlighting', async () => {
-//         await editor.type(javaFileName, 'error', 30);
-//         await editor.waitErrorInLine(30);
-//         await editor.performKeyCombination(javaFileName, Key.chord(Key.BACK_SPACE, Key.BACK_SPACE, Key.BACK_SPACE, Key.BACK_SPACE, Key.BACK_SPACE));
-//         await editor.waitErrorInLineDisappearance(30);
-//     });
+    test('Error highlighting', async () => {
+        await editor.type(javaFileName, 'error', 30);
+        await editor.waitErrorInLine(30);
+        await editor.performKeyCombination(javaFileName, Key.chord(Key.BACK_SPACE, Key.BACK_SPACE, Key.BACK_SPACE, Key.BACK_SPACE, Key.BACK_SPACE));
+        await editor.waitErrorInLineDisappearance(30);
+    });
 
-//     test('Autocomplete', async () => {
-//         await editor.moveCursorToLineAndChar(javaFileName, 32, 17);
-//         await editor.pressControlSpaceCombination(javaFileName);
-//         await editor.waitSuggestionContainer();
-//         await editor.waitSuggestion(javaFileName, 'SpringApplication - org.springframework.boot');
-//     });
+    test('Autocomplete', async () => {
+        await editor.moveCursorToLineAndChar(javaFileName, 32, 17);
+        await editor.pressControlSpaceCombination(javaFileName);
+        await editor.waitSuggestionContainer();
+        await editor.waitSuggestion(javaFileName, 'SpringApplication - org.springframework.boot');
+    });
 
-//     test('Suggestion', async () => {
-//         await editor.moveCursorToLineAndChar(javaFileName, 32, 27);
-//         await editor.pressControlSpaceCombination(javaFileName);
-//         await editor.waitSuggestion(javaFileName, 'run(Class<?> primarySource, String... args) : ConfigurableApplicationContext');
-//     });
+    test('Suggestion', async () => {
+        await editor.moveCursorToLineAndChar(javaFileName, 32, 27);
+        await editor.pressControlSpaceCombination(javaFileName);
+        await editor.waitSuggestion(javaFileName, 'run(Class<?> primarySource, String... args) : ConfigurableApplicationContext');
+    });
 
-//     test('Codenavigation', async () => {
-//         await editor.moveCursorToLineAndChar(javaFileName, 32, 17);
-//         await editor.performKeyCombination(javaFileName, Key.chord(Key.CONTROL, Key.F12));
-//         await editor.waitEditorAvailable(codeNavigationClassName);
-//     });
+    test('Codenavigation', async () => {
+        await editor.moveCursorToLineAndChar(javaFileName, 32, 17);
+        await editor.performKeyCombination(javaFileName, Key.chord(Key.CONTROL, Key.F12));
+        await editor.waitEditorAvailable(codeNavigationClassName);
+    });
 
-//     test.skip('Yaml LS initialization', async () => {
-//         await projectTree.expandPathAndOpenFileInAssociatedWorkspace(pathToYamlFolder, yamlFileName);
-//         await editor.waitEditorAvailable(yamlFileName);
-//         await editor.clickOnTab(yamlFileName);
-//         await editor.waitTabFocused(yamlFileName);
-//         await ide.waitStatusBarContains('Starting Yaml Language Server');
-//         await ide.waitStatusBarContains('100% Starting Yaml Language Server');
-//         await ide.waitStatusBarTextAbsence('Starting Yaml Language Server');
-//     });
- });
+    test.skip('Yaml LS initialization', async () => {
+        await projectTree.expandPathAndOpenFileInAssociatedWorkspace(pathToYamlFolder, yamlFileName);
+        await editor.waitEditorAvailable(yamlFileName);
+        await editor.clickOnTab(yamlFileName);
+        await editor.waitTabFocused(yamlFileName);
+        await ide.waitStatusBarContains('Starting Yaml Language Server');
+        await ide.waitStatusBarContains('100% Starting Yaml Language Server');
+        await ide.waitStatusBarTextAbsence('Starting Yaml Language Server');
+    });
+  });
 
-suite('Validation of workspace build and run', async () => {
+ suite('Validation of workspace build and run', async () => {
     test('Build application', async () => {
         await runTask('che: build-file-output');
-        await projectTree.expandPathAndOpenFile('', 'build-output.txt');
+        await projectTree.expandPathAndOpenFileInAssociatedWorkspace(projectName, 'build-output.txt');
         await editor.followAndWaitForText('build-output.txt', '[INFO] BUILD SUCCESS', 180000, 5000);
     });
 
@@ -146,7 +145,7 @@ suite('Validation of workspace build and run', async () => {
     });
 
     test('Check the running application', async () => {
-        await previewWidget.waitContentAvailable(SpringAppLocators.springTitleLocator, 60000, 10000);
+        await previewWidget.waitContentAvailableInAssoziatedWorkspace(SpringAppLocators.springTitleLocator, 60000, 10000);
     });
 
     test('Close preview widget', async () => {
@@ -158,7 +157,6 @@ suite('Validation of workspace build and run', async () => {
         await terminal.closeTerminalTab('build-file-output');
         await terminal.rejectTerminalProcess('run');
         await terminal.closeTerminalTab('run');
-
         await warningDialog.waitAndCloseIfAppear();
     });
 });
@@ -216,11 +214,11 @@ suite('Display source code changes in the running application', async () => {
 
         await warningDialog.waitAndCloseIfAppear();
     });
-});
+ });
 
 suite('Validation of debug functionality', async () => {
     test('Open file and activate breakpoint', async () => {
-        await projectTree.expandPathAndOpenFile(pathToJavaFolder, javaFileName);
+        await projectTree.expandPathAndOpenFileInAssociatedWorkspace(pathToJavaFolder, javaFileName);
         await editor.selectTab(javaFileName);
         await editor.moveCursorToLineAndChar(javaFileName, 34, 1);
         await editor.activateBreakpoint(javaFileName, 32);
@@ -247,7 +245,7 @@ suite('Validation of debug functionality', async () => {
     });
 
     test('Add debug configuration options', async () => {
-        await editor.moveCursorToLineAndChar('launch.json', 5, 22);
+        await editor.moveCursorToLineAndChar('launch.json', 5, 24);
         await editor.performKeyCombination('launch.json', Key.chord(Key.CONTROL, Key.SPACE));
         await editor.clickOnSuggestion('Java: Launch Program in Current File');
         await editor.waitTabWithUnsavedStatus('launch.json');
@@ -284,26 +282,26 @@ async function runTask(task: string) {
     await quickOpenContainer.clickOnContainerItem(task);
 }
 
-// async function checkJavaPathCompletion() {
-//     if (await ide.isNotificationPresent('Classpath is incomplete. Only syntax errors will be reported')) {
-//         const classpathText: string = fs.readFileSync('./files/happy-path/petclinic-classpath.txt', 'utf8');
-//         const workaroundReportText: string = '\n############################## \n\n' +
-//             'Known issue: https://github.com/eclipse/che/issues/13427 \n' +
-//             '\"Java LS \"Classpath is incomplete\" warning when loading petclinic\" \n' +
-//             '\".classpath\" will be configured with next settings: \n\n' +
-//             classpathText + '\n' +
-//             '############################## \n';
+async function checkJavaPathCompletion() {
+    if (await ide.isNotificationPresent('Classpath is incomplete. Only syntax errors will be reported')) {
+        const classpathText: string = fs.readFileSync('./files/happy-path/petclinic-classpath.txt', 'utf8');
+        const workaroundReportText: string = '\n############################## \n\n' +
+            'Known issue: https://github.com/eclipse/che/issues/13427 \n' +
+            '\"Java LS \"Classpath is incomplete\" warning when loading petclinic\" \n' +
+            '\".classpath\" will be configured with next settings: \n\n' +
+            classpathText + '\n' +
+            '############################## \n';
 
-//         console.log(workaroundReportText);
+        console.log(workaroundReportText);
 
-//         await projectTree.expandPathAndOpenFile(projectName, classPathFilename);
-//         await editor.waitEditorAvailable(classPathFilename);
+        await projectTree.expandPathAndOpenFile(projectName, classPathFilename);
+        await editor.waitEditorAvailable(classPathFilename);
 
-//         await editor.type(classPathFilename, Key.chord(Key.CONTROL, 'a'), 1);
-//         await editor.performKeyCombination(classPathFilename, Key.DELETE);
+        await editor.type(classPathFilename, Key.chord(Key.CONTROL, 'a'), 1);
+        await editor.performKeyCombination(classPathFilename, Key.DELETE);
 
-//         await editor.type(classPathFilename, classpathText, 1);
-//         await editor.waitTabWithSavedStatus(classPathFilename);
-//     }
-// }
+        await editor.type(classPathFilename, classpathText, 1);
+        await editor.waitTabWithSavedStatus(classPathFilename);
+    }
+}
 

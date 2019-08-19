@@ -159,12 +159,19 @@ export class ProjectTree {
         let pathEntry = `${projectName}`;
         let patToItemInAssociatedWorkspace = pathToItem.replace(`${projectName}/`, '');
         let paths: Array<string> = new Array();
+
+        // if we in the root of project
+        if (pathToItem.split('/').length < 2) {
+            await this.clickOnItem(`${projectName}/${fileName}`, timeout);
+          return;
+        }
         // make direct path for each project tree item
         patToItemInAssociatedWorkspace.split('/')
             .forEach(item => {
                pathEntry = pathEntry + `/${item}`;
                paths.push(pathEntry);
             });
+
 
         // expand each project tree item
         for (const path of paths) {
